@@ -63,13 +63,15 @@ func self(c Context, v Value) Value {
 // vectorSelf promotes v to type Vector.
 // v must be a scalar.
 func vectorSelf(c Context, v Value) Value {
-	switch v.(type) {
-	case Vector:
-		Errorf("internal error: vectorSelf of vector")
-	case Matrix:
-		Errorf("internal error: vectorSelf of matrix")
-	}
 	return NewVector([]Value{v})
+}
+
+// enclose wraps a scalar as a 0 rank matrix
+func encloseSelf(c Context, v Value) Value {
+	return NewMatrix(
+		[]Value{Int(1)},
+		[]Value{v},
+	)
 }
 
 // floatSelf promotes v to type BigFloat.
@@ -429,6 +431,19 @@ func init() {
 				matrixType: func(c Context, v Value) Value {
 					return v.(Matrix).data
 				},
+			},
+		},
+
+		{
+			name: "enc",
+			fn: [numType]unaryFn{
+				intType:      self,
+				charType:     self,
+				bigIntType:   self,
+				bigRatType:   self,
+				bigFloatType: self,
+				vectorType:   encloseSelf,
+				matrixType:   encloseSelf,
 			},
 		},
 

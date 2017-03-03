@@ -39,29 +39,14 @@ func (m *Matrix) Data() Vector {
 // value is a slice of already-printed values.
 // The receiver provides only the shape of the matrix.
 func (m Matrix) write2d(b *bytes.Buffer, value []string, width int) {
-	nrows := int(m.shape[0].(Int))
-	ncols := int(m.shape[1].(Int))
-	for row := 0; row < nrows; row++ {
-		if row > 0 {
-			b.WriteByte('\n')
-		}
-		index := row * ncols
-		for col := 0; col < ncols; col++ {
-			if col > 0 {
-				b.WriteByte(' ')
-			}
-			s := value[index]
-			pad := width - len(s)
-			for ; pad >= 10; pad -= 10 {
-				b.WriteString("          ")
-			}
-			for ; pad > 0; pad-- {
-				b.WriteString(" ")
-			}
-			b.WriteString(s)
-			index++
+	fmt.Fprintf(b, "[")
+	for i := range value {
+		fmt.Fprintf(b, value[i])
+		if i+1 != len(value) {
+			fmt.Fprintf(b, " ")
 		}
 	}
+	fmt.Fprintf(b, "]")
 }
 
 func (m Matrix) String() string {
@@ -72,15 +57,11 @@ func (m Matrix) Sprint(conf *config.Config) string {
 	var b bytes.Buffer
 	switch len(m.shape) {
 	case 0:
-		Errorf("matrix is scalar")
 	case 1:
-		Errorf("matrix is vector")
+		fmt.Fprintf(&b, "<%s>", m.data[0].Sprint(conf))
 	case 2:
 		nrows := int(m.shape[0].(Int))
 		ncols := int(m.shape[1].(Int))
-		if nrows == 0 || ncols == 0 {
-			return ""
-		}
 		// If it's all chars, print it without padding or quotes.
 		if m.data.AllChars() {
 			for i := 0; i < nrows; i++ {
@@ -315,9 +296,6 @@ func reshape(A, B Vector) Value {
 // rotate returns a copy of v with elements rotated left by n.
 // Rotation occurs on the rightmost axis.
 func (m Matrix) rotate(n int) Value {
-	if len(m.shape) == 0 {
-		return Matrix{}
-	}
 	elems := make([]Value, len(m.data))
 	dim := int(m.shape[len(m.shape)-1].(Int))
 	n %= dim

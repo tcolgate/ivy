@@ -68,10 +68,6 @@ func (s sliceExpr) Eval(context value.Context) value.Value {
 	v := make([]value.Value, len(s))
 	for i, x := range s {
 		elem := x.Eval(context)
-		// Each element must be a singleton.
-		if !isScalar(elem) {
-			value.Errorf("vector element must be scalar; have %s", elem)
-		}
 		v[i] = elem
 	}
 	return value.NewVector(v)
